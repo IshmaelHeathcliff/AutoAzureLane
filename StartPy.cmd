@@ -1,0 +1,1 @@
+python "E:\Games\Game Tools\AutoAzureLane\AutoAzureLane.py"

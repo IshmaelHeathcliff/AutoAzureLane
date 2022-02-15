@@ -48,7 +48,7 @@ def WaitImgLongTime(targetImg, interval=10):  # 等待图片出现,低频率检�
 # isClick:找到图片后是否点击
 # isShip:查找失败后是否跳过
 # maxTry:查找失败重新尝试次数
-def CheckAndClickImg(targetImg, isClick=True, isShip=True, maxTry=1, autoExit=False):
+def CheckAndClickImg(targetImg, isClick=True, isShip=True, maxTry=3, autoExit=False):
     target_ImgPath = GetFullPath(targetImg)
     Screen_ImgPath = image_X()
     print(target_ImgPath)
@@ -141,6 +141,13 @@ def Home():
     CheckAndClickImg("img\home.png")
     time.sleep(0.5)
 
+def Confirm():
+    CheckAndClickImg("img\confirm.png")
+    time.sleep(0.5)
+
+
+def Skip():
+    DoKeyDown("j")
 
 def HardMode():
     WeighAnchor()
@@ -151,7 +158,7 @@ def HardMode():
     time.sleep(0.5)
     StartBattle()
     StartBattle()
-    for i in range(3):
+    for i in range(2):
         StartAgain()
     Home()
 
@@ -163,7 +170,7 @@ def ChallengeAt(n):
         time.sleep(0.5)
         CheckAndClickImg("img\challenge\quick_battle.png")
         time.sleep(0.5)
-        DoKeyDown("j")
+        Skip()
         Back()
     CheckAndClickImg("img\challenge\\next_challenge.png")
     time.sleep(0.5)
@@ -179,9 +186,81 @@ def Challenge():
 
     Home()
 
+def Fleet():
+    CheckAndClickImg("img\\fleet\\fleet.png")
+    time.sleep(0.5)
+    CheckAndClickImg("img\\fleet\logistics.png")
+    time.sleep(0.5)
+    CheckAndClickImg("img\\fleet\\receive_reward.png")
+    time.sleep(0.5)
+    Skip()
+    for i in range(3):
+        CheckAndClickImg("img\\fleet\submit.png")
+        time.sleep(0.5)
+        Confirm()
+        Skip()
+    Home()
+
+
+def ExecuteOperationTask():
+    if(not CheckAndClickImg("img\operation\enter.png")):
+        return
+    time.sleep(2)
+    CheckAndClickImg("img\operation\\auto.png")
+    time.sleep(0.5)
+    WaitImgLongTime("img\operation\leave.png", 20)
+    CheckAndClickImg("img\operation\details.png")
+    time.sleep(0.5)
+
+
+def Intelligence():
+    CheckAndClickImg("img\operation\intelligence.png")
+    time.sleep(0.5)
+    for i in range(2):
+        CheckAndClickImg("img\operation\\battle_start.png")
+        time.sleep(0.5)
+        CheckAndClickImg("img\operation\\weigh_anchor.png")
+        time.sleep(0.5)
+        WaitImgLongTime("img\operation\confirm.png")
+    CheckAndClickImg("img\operation\collect_reward.png")
+    time.sleep(0.5)
+    Skip()
+
+
+
+
+def Operation():
+    WeighAnchor()
+    CheckAndClickImg("img\operation\operation.png")
+    time.sleep(0.5)
+    CheckAndClickImg("img\operation\details.png")
+    time.sleep(0.5)
+    CheckAndClickImg("img\operation\operation_tasks.png")
+    time.sleep(0.5)
+    CheckAndClickImg("img\operation\\accept_all.png")
+    time.sleep(0.5)
+    Back()
+    while(CheckAndClickImg("img\operation\\find.png")):
+        time.sleep(2)
+        ExecuteOperationTask()
+    Home()
+
+
+
+def ReceiveAward():
+    CheckAndClickImg("img\\tasks\\missions.png")
+    time.sleep(0.5)
+    CheckAndClickImg("img\\tasks\\receive_award.png")
+    time.sleep(0.5)
+    Skip()
+    Home()
 
 def DailyTasks():
-    HardMode()
+    # HardMode()
+    # Challenge()
+    # Fleet()
+    # ReceiveAward()
+    Operation()
 
 # 按下Esc停止
 
@@ -201,7 +280,13 @@ def RunAutoAL():
     global t0
     t0 = threading.Thread(target=CheckEnd, args=(endKey,))
     t0.start()
+    # print('Wait to start...')
+    # for i in range(20):
+    #     print('%ds left...'%(20-i))
+    #     time.sleep(1)
     print('=== Start ===')
+    Skip()
+    time.sleep(1)
     # 日常
     DailyTasks()
     print('=== end ===')
