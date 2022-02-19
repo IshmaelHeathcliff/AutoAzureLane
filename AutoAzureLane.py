@@ -1,202 +1,82 @@
-
-from PIL import ImageGrab
-import sys
-import os
-import threading
-import pyautogui
-import time
-import aircv as ac
-import keyboard
-
-# Global
-print("path ", os.path.dirname(sys.executable))
-# print("path " , os.getcwd())
-
-curDir = os.path.dirname(__file__)
-# 图片路径拼接
-
-
-def GetFullPath(pngName):
-    global curDir
-    return os.path.join(curDir, pngName)
-
-
-# 利用文件是否存在判断是Exe 还是 Py文件
-if(os.path.exists(GetFullPath('config.ini')) == False):
-    print('Exe Run')
-    curDir = os.getcwd()
-
-waitTime = 0
-minMatch = 0.7  # 最低相似度匹配
-warnMatch = 0.85  # 相似度小于此时, 打印黄字
-
-tMain = threading.Thread()
-t0 = threading.Thread()
-
-
-def WaitImgLongTime(targetImg, interval=10):  # 等待图片出现,低频率检测
-    maxTryTime = 6*3  # 默认最多等待3分钟
-    longTimer = 0
-    while (not CheckAndClickImg(targetImg, True, True, 1)):
-        time.sleep(interval)
-        longTimer += 1
-        if(longTimer > maxTryTime):
-            return
-
-
-# 查找图片
-# isClick:找到图片后是否点击
-# isShip:查找失败后是否跳过
-# maxTry:查找失败重新尝试次数
-def CheckAndClickImg(targetImg, isClick=True, isShip=True, maxTry=3, autoExit=False):
-    target_ImgPath = GetFullPath(targetImg)
-    Screen_ImgPath = image_X()
-    print(target_ImgPath)
-    imsrc = ac.imread(Screen_ImgPath)  # 原始图像
-    imsch = ac.imread(target_ImgPath)  # 带查找的部分
-    match_result = ac.find_template(imsrc, imsch, minMatch)
-    print('match : %s %s' % (targetImg, match_result))
-    global waitTime
-
-    if match_result != None:
-        x1, y1 = match_result['result']
-        if(match_result['confidence'] < warnMatch):
-            print("\033[1;33m %s %s \033[0m" %
-                  (targetImg, match_result['confidence']))
-        waitTime = 0
-
-        if(isClick):
-            pyautogui.moveTo(x1, y1)
-            time.sleep(0.5)
-            pyautogui.click()
-            time.sleep(0.4)
-        return True
-    else:
-        waitTime = waitTime+1
-        print((isShip == False))
-        if((isShip == False) | (waitTime < maxTry)):
-            time.sleep(0.1)
-            if(isShip == False):
-                time.sleep(3)
-            if(waitTime < maxTry & autoExit):
-                DoKeyDown(exitKey)
-            return CheckAndClickImg(targetImg, isClick, isShip, maxTry, autoExit)
-        else:
-            print("Ship >> ", targetImg)
-            return False
-
-
-# 屏幕截图,并返回保存路径
-def image_X():
-    global curDir
-    img = ImageGrab.grab()
-    img.save(curDir + "/temp.png")
-    return curDir + "/temp.png"
-
-
-# 按钮事件
-def DoKeyDown(_key):
-    pyautogui.press(_key)
-    time.sleep(0.6)
-# 快按钮事件
-
-
-def FastKeyDown(_key):
-    print(_key)
-    time.sleep(0.03)
-    pyautogui.press(_key)
-
-
-def LoopKeyDown(_key):
-    time.sleep(2)
-    while(True):
-        FastKeyDown(_key)
+from img import *
 
 
 def WeighAnchor():
     CheckAndClickImg("img\weigh_anchor.png")
-    time.sleep(0.5)
 
 
 def Mainline():
     CheckAndClickImg("img\mainline.png")
-    time.sleep(0.5)
 
 
 def StartBattle():
     CheckAndClickImg("img\start.png")
-    time.sleep(0.5)
 
 
 def Back():
     CheckAndClickImg("img\\back.png")
-    time.sleep(0.5)
 
 
 def StartAgain():
     WaitImgLongTime("img\start_again.png")
 
 
+def Exit_Notification():
+    time.sleep(10)
+    CheckAndClickImg("img\exit_notification.png")
+
+
 def Home():
     CheckAndClickImg("img\home.png")
-    time.sleep(0.5)
+
 
 def Confirm():
     CheckAndClickImg("img\confirm.png")
-    time.sleep(0.5)
 
 
 def Skip():
     DoKeyDown("j")
 
+
 def HardMode():
     WeighAnchor()
     Mainline()
     CheckAndClickImg("img\hard\hardmode.png")
-    time.sleep(0.5)
     CheckAndClickImg("img\hard\hardmode12-1.png")
-    time.sleep(0.5)
     StartBattle()
     StartBattle()
-    for i in range(2):
+    Exit_Notification()
+    for i in range(3):
         StartAgain()
     Home()
 
 
 def ChallengeAt(n):
     if(CheckAndClickImg("img\challenge\challenge%d.png" % (n))):
-        time.sleep(0.5)
         CheckAndClickImg("img\challenge\challenge%d-1.png" % (n))
-        time.sleep(0.5)
         CheckAndClickImg("img\challenge\quick_battle.png")
-        time.sleep(0.5)
         Skip()
         Back()
     CheckAndClickImg("img\challenge\\next_challenge.png")
-    time.sleep(0.5)
 
 
 def Challenge():
     WeighAnchor()
     CheckAndClickImg("img\challenge\challenge.png")
-    time.sleep(0.5)
 
     for i in range(1, 6):
         ChallengeAt(i)
 
     Home()
 
+
 def Fleet():
     CheckAndClickImg("img\\fleet\\fleet.png")
-    time.sleep(0.5)
     CheckAndClickImg("img\\fleet\logistics.png")
-    time.sleep(0.5)
     CheckAndClickImg("img\\fleet\\receive_reward.png")
-    time.sleep(0.5)
     Skip()
     for i in range(3):
         CheckAndClickImg("img\\fleet\submit.png")
-        time.sleep(0.5)
         Confirm()
         Skip()
     Home()
@@ -207,38 +87,26 @@ def ExecuteOperationTask():
         return
     time.sleep(2)
     CheckAndClickImg("img\operation\\auto.png")
-    time.sleep(0.5)
     WaitImgLongTime("img\operation\leave.png", 20)
     CheckAndClickImg("img\operation\details.png")
-    time.sleep(0.5)
 
 
 def Intelligence():
     CheckAndClickImg("img\operation\intelligence.png")
-    time.sleep(0.5)
     for i in range(2):
         CheckAndClickImg("img\operation\\battle_start.png")
-        time.sleep(0.5)
         CheckAndClickImg("img\operation\\weigh_anchor.png")
-        time.sleep(0.5)
         WaitImgLongTime("img\operation\confirm.png")
     CheckAndClickImg("img\operation\collect_reward.png")
-    time.sleep(0.5)
     Skip()
-
-
 
 
 def Operation():
     WeighAnchor()
     CheckAndClickImg("img\operation\operation.png")
-    time.sleep(0.5)
     CheckAndClickImg("img\operation\details.png")
-    time.sleep(0.5)
     CheckAndClickImg("img\operation\operation_tasks.png")
-    time.sleep(0.5)
     CheckAndClickImg("img\operation\\accept_all.png")
-    time.sleep(0.5)
     Back()
     while(CheckAndClickImg("img\operation\\find.png")):
         time.sleep(2)
@@ -246,21 +114,43 @@ def Operation():
     Home()
 
 
+def CatHouse():
+    CheckAndClickImg("img\\cat\\living_area.png")
+    CheckAndClickImg("img\\cat\\cat.png")
+    CheckAndClickImg("img\\cat\\confirm.png")
+    CheckAndClickImg("img\\cat\\cat_house.png")
+    CheckAndClickImg("img\\cat\\cat_clean1.png")
+    time.sleep(1)
+    CheckAndClickImg("img\\cat\\cat_clean2.png")
+    time.sleep(1)
+    CheckAndClickImg("img\\cat\\cat_clean3.png")
+    time.sleep(1)
+    Skip()
+    time.sleep(1)
+    CheckAndClickImg("img\\cat\\cat_close.png")
+    CheckAndClickImg("img\\cat\\cat_shop.png")
+    CheckAndClickImg("img\\cat\\buy_cat.png")
+    CheckAndClickImg("img\\cat\\confirm_buy_cat.png")
+    time.sleep(2)
+    Skip()
+    Skip()
+    CheckAndClickImg("img\\cat\\exit_cat.png")
+
 
 def ReceiveAward():
     CheckAndClickImg("img\\tasks\\missions.png")
-    time.sleep(0.5)
     CheckAndClickImg("img\\tasks\\receive_award.png")
-    time.sleep(0.5)
     Skip()
     Home()
 
+
 def DailyTasks():
-    # HardMode()
-    # Challenge()
-    # Fleet()
-    # ReceiveAward()
+    HardMode()
+    Challenge()
+    Fleet()
     Operation()
+    CatHouse()
+    ReceiveAward()
 
 # 按下Esc停止
 
@@ -281,12 +171,17 @@ def RunAutoAL():
     t0 = threading.Thread(target=CheckEnd, args=(endKey,))
     t0.start()
     # print('Wait to start...')
-    # for i in range(20):
-    #     print('%ds left...'%(20-i))
+    # for i in range(30):
+    #     print('%ds left...' % (30-i))
     #     time.sleep(1)
     print('=== Start ===')
-    Skip()
-    time.sleep(1)
+    # Skip()
+    # time.sleep(2)
+    # Skip()
+    # time.sleep(1)
+    # Skip()
+    # Home()
+    # CheckAndClickImg("img\exit_notification.png")
     # 日常
     DailyTasks()
     print('=== end ===')
